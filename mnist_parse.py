@@ -3,7 +3,7 @@ import numpy as np
 import scipy.misc
 
 def getLabels():
-    with open('train-labels-idx3-ubyte', 'rb') as f:
+    with open('train-labels-idx1-ubyte', 'rb') as f:
         magic, num = struct.unpack(">II", f.read(8))
         labels = np.fromfile(f, dtype=np.uint8)
         return labels
