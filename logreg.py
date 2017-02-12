@@ -6,22 +6,32 @@ import mnist_parse
 
 # parameters
 N = 10000
+valN = 10000
 lr = 3
 epochs = 1000
 
 # import data
 rawX = mnist_parse.getImages()[:N]
 rawY = mnist_parse.getLabels()[:N]
+rawValX = mnist_parse.getImages()[N:N+valN]
+rawValY = mnist_parse.getLabels()[N:N+valN]
 
-trainX = rawX.reshape(N, rawX.shape[1]*rawX.shape[2])
-trainX = np.concatenate((trainX, np.ones((N,1))), axis=1)
-trainX -= trainX.mean(axis=1)[:, np.newaxis]
-trainX /= trainX.std(axis=1)[:, np.newaxis]
+# wrangle data
+def x_wrangle(x_in):
+    x = x_in.reshape(x_in.shape[0], x_in.shape[1]*x_in.shape[2])
+    x = np.concatenate((x, np.ones((x.shape[0],1))), axis=1)
+    x -= x.mean(axis=1)[:, np.newaxis]
+    x /= x.std(axis=1)[:, np.newaxis]
+    return x
+trainX = x_wrangle(rawX)
+valX = x_wrangle(rawValX)
 feats = trainX.shape[1]
 
 classes = 10
 trainY = np.zeros((N, classes))
 trainY[np.arange(N), rawY] = 1
+valY = np.zeros((valN, classes))
+valY[np.arange(valN), rawValY] = 1
 
 # initialize variables
 x = T.dmatrix("x")
@@ -48,3 +58,5 @@ for i in range(epochs):
         print(loss[0])
 acc = evaluate(trainX, trainY)[0]
 print("training accuracy: " + str(acc))
+vacc = evaluate(valX, valY)[0]
+print("validation accuracy: " + str(vacc))
