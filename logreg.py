@@ -5,7 +5,7 @@ import theano.tensor as T
 import mnist_parse
 
 # parameters
-N = 10000
+N = 50000
 valN = 10000
 lr = 3
 epochs = 1000
