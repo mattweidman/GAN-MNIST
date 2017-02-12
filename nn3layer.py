@@ -8,10 +8,10 @@ import mnist_parse
 N = 50000
 valN = 10000
 lr = 10
-lr_decay = 1 #0.999
+lr_decay = 0.999
 epochs = 10000
-hiddens = 25
-mb_size = 100
+hiddens = 300
+mb_size = 30
 
 # import data
 rawX = mnist_parse.getImages()[:N]
@@ -63,7 +63,7 @@ for i in range(epochs):
     loss = train(trainX[indices,:], trainY[indices])
     lr *= lr_decay
     if (i % 1000 == 0):
-        print(loss[0], lr)
+        print(loss[0])
 acc = evaluate(trainX, trainY)[0]
 print("training accuracy: " + str(acc))
 vacc = evaluate(valX, valY)[0]
