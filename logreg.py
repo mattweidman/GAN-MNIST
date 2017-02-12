@@ -5,9 +5,9 @@ import theano.tensor as T
 import mnist_parse
 
 # parameters
-N = 1000
+N = 10000
 lr = 3
-epochs = 0
+epochs = 1000
 
 # import data
 rawX = mnist_parse.getImages()[:N]
@@ -15,6 +15,8 @@ rawY = mnist_parse.getLabels()[:N]
 
 trainX = rawX.reshape(N, rawX.shape[1]*rawX.shape[2])
 trainX = np.concatenate((trainX, np.ones((N,1))), axis=1)
+trainX -= trainX.mean(axis=1)[:, np.newaxis]
+trainX /= trainX.std(axis=1)[:, np.newaxis]
 feats = trainX.shape[1]
 
 classes = 10
@@ -24,7 +26,8 @@ trainY[np.arange(N), rawY] = 1
 # initialize variables
 x = T.dmatrix("x")
 y = T.dmatrix("y")
-w = theano.shared(np.random.randn(feats, classes), name="w")
+r = 4 * np.sqrt(6 / (feats + classes))
+w = theano.shared(np.random.uniform(-r, r, (feats, classes)), name="w")
 
 # equations
 h = T.nnet.sigmoid(T.dot(x,w))
@@ -44,4 +47,4 @@ for i in range(epochs):
     if (i % 100 == 0):
         print(loss[0])
 acc = evaluate(trainX, trainY)[0]
-print(acc)
+print("training accuracy: " + str(acc))
