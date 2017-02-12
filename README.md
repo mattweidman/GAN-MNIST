@@ -2,5 +2,5 @@
 Generative adversarial network for generating MNIST digits. Project just started. Nothing interesting yet.
 
 **TODO**
-* create a neural network classifier
-* create a neural network generator
+* Properly join the generator and discriminator
+* Try to train the GAN
