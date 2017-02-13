@@ -40,8 +40,8 @@ class GAN:
         self.p = T.nnet.sigmoid(T.dot(h0D, self.w1D))
 
         self.loss_D = -0.5 * T.log(self.p[:self.div_indx,:]).mean() \
-                -0.5 * T.log(self.p[self.div_indx:,:]).mean()
-        self.loss_G = -0.5 * T.log(self.p[:self.div_indx,:]).mean()
+                -0.5 * T.log(1-self.p[self.div_indx:,:]).mean()
+        self.loss_G = -0.5 * T.log(self.p[self.div_indx:,:]).mean()
 
         self.gw0D = T.grad(self.loss_D, self.w0D)
         self.gw1D = T.grad(self.loss_D, self.w1D)
