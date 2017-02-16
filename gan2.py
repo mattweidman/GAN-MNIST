@@ -66,9 +66,11 @@ class GAN:
 feats_G = 100
 hiddens_G = 300
 hiddens_D = 300
-N = 1000
-lr = 0.1
-epochs = 100
+N = 50000
+batch_size = 1000
+lr = 1
+epochs = 1000000
+num_imgs = 16
 
 # load data
 rawX = mnist_parse.getImages()[:N]
@@ -81,18 +83,21 @@ trainX = x_wrangle(rawX)
 feats_D = trainX.shape[1]
 
 # initialize
-gan = GAN(feats_G, hiddens_G, feats_D, hiddens_D, N, N, lr)
+gan = GAN(feats_G, hiddens_G, feats_D, hiddens_D, batch_size, batch_size, lr)
 
 # train
+print("epoch, loss_D, loss_G")
 for i in range(epochs):
-    noise = np.random.randn(N, feats_G)
-    loss_D = gan.train_D(noise, trainX, N)
-    loss_G = gan.train_G(noise, trainX, N)
+    noise = np.random.randn(batch_size, feats_G)
+    indices = np.random.randint(0, high=N, size=batch_size)
+    loss_D = gan.train_D(noise, trainX[indices,:], batch_size)
+    loss_G = gan.train_G(noise, trainX[indices,:], batch_size)
     if i % 10 == 0:
-        print(str(loss_D[0]) + ", " + str(loss_G[0]))
-
-# try generating
-noise = np.random.randn(1, feats_G)
-generated = gan.generate(noise)[0]
-img = generated[:,:-1].reshape(28,28)
-scipy.misc.imsave("mnist_gen.png", img)
+        print(str(i) + ", " + str(loss_D[0]) + ", " + str(loss_G[0]))
+    if i % 100 == 0:
+        print("generating images")
+        for i in range(num_imgs):
+            noise = np.random.randn(1, feats_G)
+            generated = gan.generate(noise)[0]
+            img = generated[:,:-1].reshape(28,28)
+            scipy.misc.imsave("mnist_gen" + str(i) + ".png", img)
