@@ -15,7 +15,7 @@ import keras.optimizers as ko
 
 import mnist_parse
 
-n_train = 10
+n_train = 50000
 classes = 10
 batch_size = 100
 noise_size = 100
@@ -75,11 +75,35 @@ d_V = klc.Dense(2, activation='softmax')(H)
 discriminator = km.Model(d_input, d_V)
 discriminator.compile(loss='categorical_crossentropy',
         optimizer=ko.Adam(lr=1e-3))
-discriminator.summary()
 
-# pretrain discriminator
-# noise = gen_noise(batch_size, noise_size)
-# gen_imgs = generator.predict(noise)
+# stack generator and discriminator
+gan_input = kl.Input(shape=[noise_size])
+H = generator(gan_input)
+gan_v = discriminator(H)
+GAN = km.Model(gan_input, gan_v)
+GAN.compile(loss='categorical_crossentropy', optimizer=ko.Adam(lr=1e-3))
+GAN.summary()
+
+# make data for pretraining
+n_pretrain = 1000
+noise = gen_noise(n_pretrain, noise_size)
+gen_imgs = generator.predict(noise)
+indices = np.random.randint(n_train, size=(n_pretrain))
+real_imgs = trainX[indices]
+x_pretrain = np.concatenate((real_imgs, gen_imgs))
+y_pretrain = np.zeros((2*n_pretrain, 2))
+y_pretrain[:n_pretrain, 1] = 1
+y_pretrain[n_pretrain:, 0] = 1
+
+# pretrain discriminator and find accuracy
+print("pretraining...")
+discriminator.fit(x_pretrain, y_pretrain, nb_epoch=1, batch_size=batch_size)
+y_hat = discriminator.predict(x_pretrain)
+y_hat_indices = np.argmax(y_hat, axis=1)
+y_indices = np.argmax(y_pretrain, axis=1)
+acc = (y_hat_indices == y_indices).mean() * 100.0
+print(y_hat)
+print("Discriminator pretraining accuracy: " + str(acc))
 
 def save_images(predict, img_name):
     imgs = predict.reshape(n_train, img_rows, img_cols)
