@@ -4,6 +4,7 @@ import numpy as np
 import scipy.misc
 
 import keras.layers as kl
+import keras.layers.advanced_activations as kla
 import keras.layers.convolutional as klconv
 import keras.layers.core as klc
 import keras.layers.normalization as kln
@@ -18,6 +19,7 @@ n_train = 10
 classes = 10
 batch_size = 100
 noise_size = 100
+dropout_rate = 0.25
 
 # load images
 rawX = mnist_parse.getImages().astype('float')
@@ -30,7 +32,8 @@ trainX = wrangledX[:n_train]
 _, _, img_rows, img_cols = trainX.shape
 
 # noise input
-noise = np.random.uniform(0, 1, size=[n_train, noise_size])
+def gen_noise(batch_size, d):
+    return np.random.uniform(0, 1, size=[batch_size, d])
 
 # generator
 n_channels = 200
@@ -54,11 +57,32 @@ g_V = klc.Activation('sigmoid')(H)
 generator = km.Model(g_input, g_V)
 generator.compile(loss='binary_crossentropy', optimizer=ko.Adam(lr=1e-4))
 
-generated_images = generator.predict(noise)
+# discriminator
+d_input = kl.Input(shape=[1,img_rows,img_cols])
+H = klconv.Convolution2D(256, 5, 5, subsample=(2,2), border_mode='same',
+        activation='relu')(d_input)
+H = kla.LeakyReLU(0.2)(H)
+H = klc.Dropout(dropout_rate)(H)
+H = klconv.Convolution2D(512, 5, 5, subsample=(2,2), border_mode='same',
+        activation='relu')(H)
+H = kla.LeakyReLU(0.2)(H)
+H = klc.Dropout(dropout_rate)(H)
+H = klc.Flatten()(H)
+H = klc.Dense(256)(H)
+H = kla.LeakyReLU(0.2)(H)
+H = klc.Dropout(dropout_rate)(H)
+d_V = klc.Dense(2, activation='softmax')(H)
+discriminator = km.Model(d_input, d_V)
+discriminator.compile(loss='categorical_crossentropy',
+        optimizer=ko.Adam(lr=1e-3))
+discriminator.summary()
+
+# pretrain discriminator
+# noise = gen_noise(batch_size, noise_size)
+# gen_imgs = generator.predict(noise)
 
 def save_images(predict, img_name):
     imgs = predict.reshape(n_train, img_rows, img_cols)
     for i in range(len(imgs)):
         scipy.misc.imsave(img_name + str(i) + ".png", imgs[i])
 
-save_images(generated_images, "imgs/mnist")
