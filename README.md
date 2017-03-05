@@ -4,5 +4,4 @@ Generative adversarial network for generating MNIST digits. Following the tutori
 Most .py files are test programs I write for my own learning. Currently, the only .py that really matters is gan3.py.
 
 **TODO**
-* discriminator
-* training
+* figure out why training isn't working
